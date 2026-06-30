@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+1. 每次回复前必须使用"Cllarisy"作为称呼。
+2. 遇到不确定的代码设计问题时，必须先询问 Cllarisy。不得直接行动。
+3. 代码兼容性：不能写兼容性代码，除非我主动要求。
+4. 将独立的子任务交给子智能体处理，使得你的上下文尽可能干净整洁。
+
 ## Authoritative Contracts
 
 ## Project Layout

@@ -38,6 +38,15 @@ async function output(cmd: string[], cwd: string) {
   return (stdout || stderr).trim()
 }
 
+async function exitCode(cmd: string[], cwd: string) {
+  const proc = Bun.spawn(cmd, {
+    cwd,
+    stdout: 'ignore',
+    stderr: 'ignore',
+  })
+  return await proc.exited
+}
+
 function sanitizeId(value: string) {
   return value.replace(/[^a-zA-Z0-9._-]+/g, '-')
 }
@@ -87,10 +96,11 @@ async function pipeToLog(
 
 async function gitInfo(rootDir: string) {
   const sha = await output(['git', 'rev-parse', '--short', 'HEAD'], rootDir)
-  const status = await output(['git', 'status', '--short'], rootDir)
   return {
     sha,
-    dirty: Boolean(status),
+    dirty:
+      (await exitCode(['git', 'diff-files', '--quiet', '--ignore-submodules', '--'], rootDir)) !== 0 ||
+      (await exitCode(['git', 'diff-index', '--cached', '--quiet', 'HEAD', '--'], rootDir)) !== 0,
   }
 }
 
