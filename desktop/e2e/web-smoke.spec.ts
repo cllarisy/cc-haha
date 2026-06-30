@@ -36,3 +36,29 @@ test('health endpoint returns ok', async ({ request }) => {
   const body = (await res.json()) as { status: string }
   expect(body.status).toBe('ok')
 })
+
+test('sidebar settings button has opaque background', async ({ page }) => {
+  const response = await page.goto('/')
+  expect(response?.status()).toBe(200)
+
+  await page.waitForSelector('#root', { state: 'visible', timeout: 15000 })
+  await page.waitForLoadState('networkidle')
+
+  const sidebarShell = page.locator('[data-testid="sidebar-shell"]')
+  await expect(sidebarShell).toHaveAttribute('data-state', 'open')
+
+  const settingsContainer = page.locator('[data-testid="sidebar-settings-container"]')
+  await expect(settingsContainer).toBeVisible({ timeout: 10000 })
+
+  const bg = await settingsContainer.evaluate((el) => {
+    const style = window.getComputedStyle(el)
+    return style.backgroundColor
+  })
+  const match = bg.match(/rgba?\(([^)]+)\)/)
+  if (!match) {
+    throw new Error(`Unable to parse background color: ${bg}`)
+  }
+  const parts = match[1].split(',').map((s) => parseFloat(s.trim()))
+  const alpha = parts.length === 4 ? parts[3] : 1
+  expect(alpha, `expected opaque background but got ${bg}`).toBe(1)
+})

@@ -9,7 +9,7 @@ export default defineConfig({
   timeout: 60_000,
   retries: 0,
   use: {
-    baseURL: 'http://127.0.0.1:3458',
+    baseURL: 'http://127.0.0.1:3459',
     trace: 'on-first-retry',
   },
   projects: [
@@ -18,13 +18,13 @@ export default defineConfig({
   webServer: {
     command: 'bun run start:web',
     cwd: path.resolve(here, '..', '..'),
-    url: 'http://127.0.0.1:3458/health',
+    url: 'http://127.0.0.1:3459/health',
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
     env: {
       CC_HAHA_RUNTIME: 'web',
       CLAUDE_H5_DIST_DIR: path.resolve(here, '..', 'dist-web'),
-      SERVER_PORT: '3458',
+      SERVER_PORT: '3459',
     },
   },
   globalSetup: fileURLToPath(new URL('./global-setup.ts', import.meta.url)),
