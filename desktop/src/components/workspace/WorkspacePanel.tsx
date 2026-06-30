@@ -320,7 +320,10 @@ function CodeSurface({
   const lines = value.split('\n')
   const visibleLines = showAllLines ? lines : lines.slice(0, WORKSPACE_PREVIEW_LINE_LIMIT)
   const activeQuote = commentLine ? visibleLines[commentLine - 1] ?? '' : ''
-  const usePlainLargePreview = showAllLines && lines.length > WORKSPACE_PREVIEW_LINE_LIMIT
+  const normalizedLanguage = normalizePrismLanguage(language)
+  const usePlainLargePreview =
+    lines.length > WORKSPACE_PREVIEW_LINE_LIMIT
+    && (showAllLines || normalizedLanguage === 'text')
   const visibleCode = usePlainLargePreview ? '' : visibleLines.join('\n')
 
   useEffect(() => {
@@ -424,7 +427,7 @@ function CodeSurface({
           <Highlight
             theme={workspacePrismTheme}
             code={visibleCode}
-            language={normalizePrismLanguage(language)}
+            language={normalizedLanguage}
           >
             {({ tokens, getLineProps, getTokenProps }) => (
               <pre
