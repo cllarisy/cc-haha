@@ -118,6 +118,26 @@ describe('cron scheduler launcher resolution', () => {
     ])
   })
 
+  it('reuses the current sidecar binary when packaged web mode omits CLAUDE_CLI_PATH', () => {
+    const appRoot = path.join(tmpDir, 'app-root')
+
+    const args = buildCronCliArgs(['--print'], {
+      execPath: '/app/claude-sidecar-linux-x64',
+      appRoot,
+      cwd: path.join(tmpDir, 'missing-cwd'),
+      moduleDir: path.join(tmpDir, 'missing-module'),
+      env: {},
+    })
+
+    expect(args).toEqual([
+      '/app/claude-sidecar-linux-x64',
+      'cli',
+      '--app-root',
+      appRoot,
+      '--print',
+    ])
+  })
+
   it('prefers an explicit CC_HAHA_ROOT when it points at a source checkout', async () => {
     const sourceRoot = path.join(tmpDir, 'source')
     await createSourceRoot(sourceRoot)

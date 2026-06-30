@@ -22,6 +22,10 @@ import { ensurePersistentStorageUpgraded } from './services/persistentStorageMig
 import { handleStaticH5Request } from './staticH5.js'
 import { classifyH5Request, shouldBlockDisabledH5Access, shouldRequireH5Token } from './h5AccessPolicy.js'
 import { H5AccessService } from './services/h5AccessService.js'
+import {
+  assertPackagedWebCliLauncher,
+  isPackagedWebRuntime,
+} from './config/packagedWebRuntime.js'
 
 function readArgValue(flag: string): string | undefined {
   const args = process.argv.slice(2)
@@ -122,6 +126,10 @@ export function startServer(port = PORT, host = HOST) {
   enableConfigs()
   diagnosticsService.installConsoleCapture()
   diagnosticsService.installProcessCapture()
+  if (isPackagedWebRuntime()) {
+    const launcher = assertPackagedWebCliLauncher()
+    process.env.CLAUDE_CLI_PATH = launcher.command
+  }
   ProviderService.setServerPort(port)
   const localConnectHost =
     host === '0.0.0.0' || host === '127.0.0.1' || host === 'localhost'
@@ -371,12 +379,14 @@ export function startServer(port = PORT, host = HOST) {
   // Start the cron scheduler to execute scheduled tasks
   cronScheduler.start()
 
-  void ensureDesktopCliLauncherInstalled().catch((error) => {
-    console.error(
-      '[desktop-cli-launcher] failed to install bundled launcher:',
-      error instanceof Error ? error.message : error,
-    )
-  })
+  if (!isPackagedWebRuntime()) {
+    void ensureDesktopCliLauncherInstalled().catch((error) => {
+      console.error(
+        '[desktop-cli-launcher] failed to install bundled launcher:',
+        error instanceof Error ? error.message : error,
+      )
+    })
+  }
 
   console.log(`[Server] Claude Code API server running at http://${host}:${port}`)
   return server
