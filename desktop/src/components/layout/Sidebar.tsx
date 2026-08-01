@@ -22,9 +22,6 @@ import { getDesktopHost } from '../../lib/desktopHost'
 import { hasRunningBackgroundTasks } from '../../lib/backgroundTasks'
 import { getSessionWorkspaceState } from '../../lib/sessionWorkspace'
 
-const desktopHost = getDesktopHost()
-const isDesktopRuntime = desktopHost.isDesktop
-const canUseNativeDialogs = desktopHost.capabilities.dialogs
 const isWindows = typeof navigator !== 'undefined' && /Win/.test(navigator.platform)
 const SESSION_LIST_AUTO_REFRESH_MS = 30_000
 const SESSION_LIST_FOCUS_REFRESH_MIN_MS = 5_000
@@ -59,6 +56,9 @@ type SessionScrollAnchor = {
 }
 
 export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
+  const desktopHost = getDesktopHost()
+  const isDesktopRuntime = desktopHost.isDesktop
+  const canUseNativeDialogs = desktopHost.capabilities.dialogs
   const t = useTranslation()
   const sessions = useSessionStore((s) => s.sessions)
   const isLoading = useSessionStore((s) => s.isLoading)
@@ -752,8 +752,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         >
           {t('sidebar.newSession')}
         </NavItem>
-        {!isMobile && (
-          <NavItem
+        <NavItem
             active={activeTabId === SCHEDULED_TAB_ID}
             collapsed={!expanded}
             label={t('sidebar.scheduled')}
@@ -765,10 +764,8 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
             icon={<ClockIcon />}
           >
             {t('sidebar.scheduled')}
-          </NavItem>
-        )}
-        {!isMobile && (
-          <NavItem
+        </NavItem>
+        <NavItem
             active={activeTabId === MARKET_TAB_ID}
             collapsed={!expanded}
             label={t('sidebar.market')}
@@ -780,8 +777,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
             icon={<StorefrontIcon />}
           >
             {t('sidebar.market')}
-          </NavItem>
-        )}
+        </NavItem>
       </div>
 
       {expanded ? (
@@ -1167,8 +1163,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         <div className="flex-1" aria-hidden="true" />
       )}
 
-      {!isMobile && (
-        <div
+      <div
           data-testid="sidebar-settings-dock"
           className={`sidebar-settings-dock absolute bottom-0 left-0 right-0 border-t border-[var(--color-border)] p-3 ${expanded ? '' : 'flex justify-center'}`}
         >
@@ -1185,8 +1180,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
           >
             {t('sidebar.settings')}
           </NavItem>
-        </div>
-      )}
+      </div>
 
       {contextMenu && (
         <div
@@ -1231,12 +1225,12 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
             >
               {t(pinned ? 'sidebar.unpinProject' : 'sidebar.pinProject')}
             </ProjectMenuItem>
-            <ProjectMenuItem
+            {desktopHost.capabilities.nativeFilePaths && <ProjectMenuItem
               icon={<FolderOpen size={18} aria-hidden="true" />}
               onClick={() => void openProjectInFinder(project)}
             >
               {t('sidebar.openInFinder')}
-            </ProjectMenuItem>
+            </ProjectMenuItem>}
             <ProjectMenuItem
               icon={hidden ? <RotateCcw size={18} aria-hidden="true" /> : <X size={18} aria-hidden="true" />}
               onClick={() => toggleHiddenProject(project)}
@@ -1260,7 +1254,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
           onSetOrganization={updateProjectOrganization}
           onSetSortBy={updateProjectSortBy}
           onCreateBlank={() => void createSessionForWorkDir()}
-          onUseExistingFolder={() => void createSessionFromExistingFolder()}
+          onUseExistingFolder={desktopHost.capabilities.dialogs ? () => void createSessionFromExistingFolder() : undefined}
           onRestoreHiddenProjects={restoreAllHiddenProjects}
           hiddenProjectCount={hiddenProjectKeys.size}
           t={t}
@@ -1279,7 +1273,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
           onSetOrganization={updateProjectOrganization}
           onSetSortBy={updateProjectSortBy}
           onCreateBlank={() => void createSessionForWorkDir()}
-          onUseExistingFolder={() => void createSessionFromExistingFolder()}
+          onUseExistingFolder={desktopHost.capabilities.dialogs ? () => void createSessionFromExistingFolder() : undefined}
           onRestoreHiddenProjects={restoreAllHiddenProjects}
           hiddenProjectCount={hiddenProjectKeys.size}
           t={t}
@@ -1490,7 +1484,7 @@ const ProjectHeaderMenu = forwardRef<HTMLDivElement, {
   onSetOrganization: (organization: SidebarProjectOrganization) => void
   onSetSortBy: (sortBy: SidebarProjectSortBy) => void
   onCreateBlank: () => void
-  onUseExistingFolder: () => void
+  onUseExistingFolder?: () => void
   onRestoreHiddenProjects: () => void
   hiddenProjectCount: number
   t: ReturnType<typeof useTranslation>
@@ -1519,9 +1513,9 @@ const ProjectHeaderMenu = forwardRef<HTMLDivElement, {
         <HeaderMenuItem icon={<SquarePen size={18} aria-hidden="true" />} onClick={onCreateBlank}>
           {t('sidebar.newBlankProject')}
         </HeaderMenuItem>
-        <HeaderMenuItem icon={<FolderOpen size={18} aria-hidden="true" />} onClick={onUseExistingFolder}>
+        {onUseExistingFolder && <HeaderMenuItem icon={<FolderOpen size={18} aria-hidden="true" />} onClick={onUseExistingFolder}>
           {t('sidebar.useExistingFolder')}
-        </HeaderMenuItem>
+        </HeaderMenuItem>}
       </div>
     )
   }

@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { previewBridgeMock } = vi.hoisted(() => ({
   previewBridgeMock: {
@@ -66,13 +66,24 @@ vi.mock('../workbench/WorkbenchTab', () => ({
 import { ContentRouter } from './ContentRouter'
 import { MARKET_TAB_ID, SETTINGS_TAB_ID, useTabStore } from '../../stores/tabStore'
 import { useUIStore } from '../../stores/uiStore'
+import { browserHost } from '../../lib/desktopHost/browserHost'
 
 describe('ContentRouter tab surfaces', () => {
+  beforeEach(() => {
+    window.desktopHost = {
+      ...browserHost,
+      kind: 'electron',
+      isDesktop: true,
+      capabilities: { ...browserHost.capabilities, terminal: true },
+    }
+  })
+
   afterEach(() => {
     cleanup()
     previewBridgeMock.close.mockClear()
     useTabStore.setState({ tabs: [], activeTabId: null })
     useUIStore.setState({ pendingSettingsTab: null })
+    Reflect.deleteProperty(window, 'desktopHost')
   })
 
   it('renders the active terminal tab as main content', () => {
@@ -87,6 +98,19 @@ describe('ContentRouter tab surfaces', () => {
     expect(screen.getByTestId('terminal-host-__terminal__1')).toHaveAttribute('data-cwd', '/tmp/project')
     expect(screen.getByTestId('terminal-host-__terminal__1')).toHaveAttribute('data-runtime-id', '__terminal__1')
     expect(screen.queryByTestId('active-session')).not.toBeInTheDocument()
+  })
+
+  it('does not mount a terminal surface in a browser runtime even for injected tab state', () => {
+    Reflect.deleteProperty(window, 'desktopHost')
+    useTabStore.setState({
+      tabs: [{ sessionId: '__terminal__web', title: 'Terminal', type: 'terminal', status: 'idle' }],
+      activeTabId: '__terminal__web',
+    })
+
+    render(<ContentRouter />)
+
+    expect(screen.queryByTestId('terminal-host-__terminal__web')).not.toBeInTheDocument()
+    expect(screen.getByTestId('active-session')).toBeInTheDocument()
   })
 
   it('uses a promoted docked runtime when rendering a terminal tab', () => {

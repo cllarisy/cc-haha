@@ -36,6 +36,8 @@ export async function handleStaticH5Request(req: Request, url: URL): Promise<Res
 
   const headers = new Headers({
     'Content-Type': contentTypeForPath(filePath),
+    'Referrer-Policy': 'no-referrer',
+    'X-Content-Type-Options': 'nosniff',
     'Cache-Control': CACHEABLE_ASSET_RE.test(url.pathname)
       ? 'public, max-age=31536000, immutable'
       : 'no-store',

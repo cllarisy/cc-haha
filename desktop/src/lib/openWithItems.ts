@@ -56,7 +56,7 @@ export type OpenWithItem = {
 }
 
 export type OpenWithDeps = {
-  openInAppBrowser: (url: string) => void
+  openInAppBrowser?: (url: string) => void
   openSystem: (urlOrPath: string) => void
   openWorkspacePreview: (relPath: string) => void
   openTarget: (targetId: string, absolutePath: string) => void
@@ -73,7 +73,10 @@ export type OpenWithContext =
 export function buildOpenWithItems(ctx: OpenWithContext, targets: OpenTarget[], deps: OpenWithDeps): OpenWithItem[] {
   const items: OpenWithItem[] = []
   if (ctx.kind === 'url') {
-    items.push({ id: 'in-app', label: deps.t('openWith.inAppBrowser'), icon: 'in-app-browser', onSelect: () => deps.openInAppBrowser(ctx.url) })
+    const openInAppBrowser = deps.openInAppBrowser
+    if (openInAppBrowser) {
+      items.push({ id: 'in-app', label: deps.t('openWith.inAppBrowser'), icon: 'in-app-browser', onSelect: () => openInAppBrowser(ctx.url) })
+    }
     items.push({ id: 'system', label: deps.t('openWith.systemBrowser'), icon: 'system', onSelect: () => deps.openSystem(ctx.url) })
     return items
   }
@@ -81,9 +84,10 @@ export function buildOpenWithItems(ctx: OpenWithContext, targets: OpenTarget[], 
     const relPath = ctx.relPath
     items.push({ id: 'preview', label: deps.t('openWith.workspacePreview'), icon: 'preview', onSelect: () => deps.openWorkspacePreview(relPath) })
   }
-  if (ctx.inAppBrowserUrl) {
+  if (ctx.inAppBrowserUrl && deps.openInAppBrowser) {
     const url = ctx.inAppBrowserUrl
-    items.push({ id: 'in-app', label: deps.t('openWith.inAppBrowser'), icon: 'in-app-browser', onSelect: () => deps.openInAppBrowser(url) })
+    const openInAppBrowser = deps.openInAppBrowser
+    items.push({ id: 'in-app', label: deps.t('openWith.inAppBrowser'), icon: 'in-app-browser', onSelect: () => openInAppBrowser(url) })
   }
   for (const target of targets.filter((x) => x.kind === 'ide')) {
     items.push({ id: `ide:${target.id}`, label: deps.t('openWith.openInTarget', { target: target.label }), icon: 'ide', target, onSelect: () => deps.openTarget(target.id, ctx.absolutePath) })

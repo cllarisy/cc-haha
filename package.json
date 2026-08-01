@@ -8,6 +8,13 @@
     "claude-haha": "./bin/claude-haha"
   },
   "scripts": {
+    "desktop:dev": "cd desktop && bun run electron:dev",
+    "desktop:build": "cd desktop && bun run electron:build",
+    "desktop:package": "cd desktop && bun run electron:package",
+    "web:dev": "bash scripts/start-web-ui.sh",
+    "web:build": "cd desktop && CC_HAHA_BUILD_TARGET=web bun run build",
+    "web:start": "CLAUDE_H5_DIST_DIR=desktop/web-dist bun run src/server/index.ts",
+    "check:web": "bun test ./src/server/staticH5.test.ts ./src/server/webAccessPolicy.test.ts ./src/server/__tests__/h5-deployment-env.test.ts ./src/server/middleware/cors.test.ts ./src/server/__tests__/websocket-handler.test.ts && cd desktop && bun run test -- --run src/main.test.tsx src/stores/settingsStore.test.ts src/lib/desktopHost/contract.test.ts src/lib/desktopRuntime.test.ts src/lib/openPreviewLink.test.ts src/api/client.test.ts src/api/websocket.test.ts src/components/layout/AppShell.test.tsx src/components/layout/ContentRouter.test.tsx src/components/layout/Sidebar.test.tsx src/components/layout/TabBar.test.tsx src/components/workbench/WorkbenchPanel.test.tsx src/components/workbench/WorkbenchTab.test.tsx src/components/workspace/WorkspaceFileOpenWith.test.tsx && CC_HAHA_BUILD_TARGET=web bun run build",
     "claude-haha": "bun run ./bin/claude-haha",
     "start": "bun run ./bin/claude-haha",
     "perf:local-index": "bun run scripts/perf/local-index-benchmark.ts",

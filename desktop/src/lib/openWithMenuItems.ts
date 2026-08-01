@@ -44,7 +44,9 @@ export function openWithMenuDeps(
   { sessionId, t, omitCopyPath }: OpenWithMenuOptions,
 ): OpenWithDeps {
   return {
-    openInAppBrowser: (url) => useBrowserPanelStore.getState().open(sessionId, url),
+    ...(getDesktopHost().capabilities.previewWebview
+      ? { openInAppBrowser: (url: string) => useBrowserPanelStore.getState().open(sessionId, url) }
+      : {}),
     openSystem: (target) => {
       void getDesktopHost().shell.openPath(target).catch(() => window.open(target, '_blank'))
     },
@@ -84,7 +86,8 @@ export function buildOpenWithMenuItems(
   targets: OpenTarget[],
   opts: OpenWithMenuOptions,
 ): OpenWithItem[] {
-  return buildOpenWithItems(ctx, targets, openWithMenuDeps(ctx, opts))
+  const safeTargets = getDesktopHost().capabilities.nativeFilePaths ? targets : []
+  return buildOpenWithItems(ctx, safeTargets, openWithMenuDeps(ctx, opts))
 }
 
 /**
@@ -102,6 +105,8 @@ export async function buildOpenWithMenuItemsForHref(
   })
   if (!ctx) return []
 
-  await useOpenTargetStore.getState().ensureTargets()
+  if (getDesktopHost().capabilities.nativeFilePaths) {
+    await useOpenTargetStore.getState().ensureTargets()
+  }
   return buildOpenWithMenuItems(ctx, useOpenTargetStore.getState().targets, opts)
 }

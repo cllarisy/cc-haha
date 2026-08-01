@@ -4,11 +4,13 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 const host = process.env.TAURI_DEV_HOST
+const webBuild = process.env.CC_HAHA_BUILD_TARGET === 'web'
 
 export default defineConfig({
-  base: './',
+  base: webBuild ? '/' : './',
   plugins: [react(), tailwindcss()],
   build: {
+    outDir: webBuild ? 'web-dist' : 'dist',
     // Vite 8 defaults to baseline-widely-available (safari16.4+), which
     // requires macOS 13+. Tauri on macOS 12 uses Safari 15 WebView.
     target: ['es2021', 'safari15'],

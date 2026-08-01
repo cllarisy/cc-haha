@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { browserHost } from '../../lib/desktopHost/browserHost'
 
 const { openBrowser } = vi.hoisted(() => ({ openBrowser: vi.fn() }))
 vi.mock('../../stores/browserPanelStore', () => ({
@@ -70,6 +71,15 @@ afterEach(() => {
 })
 
 describe('AssistantMessage file references', () => {
+  beforeEach(() => {
+    window.desktopHost = {
+      ...browserHost,
+      kind: 'electron',
+      isDesktop: true,
+      capabilities: { ...browserHost.capabilities, nativeFilePaths: true },
+    }
+  })
+
   it('opens the code view at the referenced line', () => {
     // #1146, and the contract src/constants/prompts.ts already asks the model for.
     render(<AssistantMessage sessionId="s1" content={'越界在 desktop/src/lib/foo.ts:42'} isStreaming={false} />)

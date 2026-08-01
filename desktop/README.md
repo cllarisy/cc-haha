@@ -1,22 +1,25 @@
 # Claude Code Haha Desktop
 
-基于 Tauri 2 + React 的桌面客户端。
+Electron + React 桌面客户端，也是 Web 模式复用的唯一前端源码。
 
 ## 开发
 
 ```bash
 bun install
-bun run tauri dev
+bun run electron:dev
 ```
 
 ## 构建
 
 ```bash
-# macOS (Apple Silicon)
-./scripts/build-macos-arm64.sh
+# 构建 Electron renderer、sidecar 与主进程
+bun run electron:build
 
-# Windows (x64, MSI only)
-.\scripts\build-windows-x64.ps1
+# 打包当前平台
+bun run electron:package
+
+# 仅构建 Web 静态产物（在仓库根目录）
+bun run web:build
 ```
 
 构建产物位于 `build-artifacts/` 目录，文件名会显式包含平台、架构和包类型。

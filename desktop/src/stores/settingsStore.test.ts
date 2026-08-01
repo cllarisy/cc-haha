@@ -1432,6 +1432,51 @@ describe('settingsStore H5 access behavior', () => {
     vi.resetModules()
     vi.clearAllMocks()
     window.localStorage.clear()
+    window.desktopHost = {
+      ...browserHost,
+      kind: 'electron',
+      isDesktop: true,
+      capabilities: { ...browserHost.capabilities, h5AccessControl: true },
+    }
+  })
+
+  it('does not request the local H5 control plane while loading Web settings', async () => {
+    Reflect.deleteProperty(window, 'desktopHost')
+    const getH5Access = vi.fn()
+    vi.doMock('../api/settings', () => ({
+      settingsApi: {
+        getUser: vi.fn().mockResolvedValue({}),
+        updateUser: vi.fn(),
+        getPermissionMode: vi.fn().mockResolvedValue({ mode: 'default' }),
+        setPermissionMode: vi.fn(),
+        getCliLauncherStatus: vi.fn(),
+      },
+    }))
+    vi.doMock('../api/models', () => ({
+      modelsApi: {
+        list: vi.fn().mockResolvedValue({ models: [] }),
+        getCurrent: vi.fn().mockResolvedValue({ model: null }),
+        setCurrent: vi.fn(),
+        getEffort: vi.fn().mockResolvedValue({ level: 'medium' }),
+        setEffort: vi.fn(),
+      },
+    }))
+    vi.doMock('../api/h5Access', () => ({
+      h5AccessApi: {
+        get: getH5Access,
+        enable: vi.fn(),
+        disable: vi.fn(),
+        regenerate: vi.fn(),
+        update: vi.fn(),
+      },
+    }))
+
+    const { useSettingsStore } = await import('./settingsStore')
+    await useSettingsStore.getState().fetchAll()
+    await useSettingsStore.getState().fetchH5Access()
+
+    expect(getH5Access).not.toHaveBeenCalled()
+    expect(useSettingsStore.getState().h5Access).toMatchObject({ enabled: false })
   })
 
   it.each([404, 405])('falls back to disabled defaults only for legacy H5 endpoint status %s', async (status) => {

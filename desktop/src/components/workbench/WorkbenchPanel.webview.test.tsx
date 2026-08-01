@@ -38,10 +38,17 @@ import { WorkbenchPanel } from './WorkbenchPanel'
 import { useWorkspacePanelStore } from '../../stores/workspacePanelStore'
 import { useBrowserPanelStore } from '../../stores/browserPanelStore'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { browserHost } from '../../lib/desktopHost/browserHost'
 
 const SESSION_ID = 'webview-session'
 
 beforeEach(() => {
+  window.desktopHost = {
+    ...browserHost,
+    kind: 'electron',
+    isDesktop: true,
+    capabilities: { ...browserHost.capabilities, previewWebview: true },
+  }
   useWorkspacePanelStore.setState(useWorkspacePanelStore.getInitialState(), true)
   useBrowserPanelStore.setState(useBrowserPanelStore.getInitialState(), true)
   useSettingsStore.setState({ locale: 'en' })

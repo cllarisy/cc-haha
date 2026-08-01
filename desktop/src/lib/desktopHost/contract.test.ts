@@ -8,10 +8,16 @@ describe('desktop host contract', () => {
     expect(browserHost.kind).toBe('browser')
     expect(browserHost.isDesktop).toBe(false)
     expect(browserHost.capabilities).toEqual({
+      adapterLifecycle: false,
       appMode: false,
-      clipboard: false,
+      clipboard: true,
+      computerUse: false,
       dialogs: false,
-      notifications: false,
+      externalLinks: true,
+      h5AccessControl: false,
+      nativeFilePaths: false,
+      notifications: true,
+      pets: false,
       previewWebview: false,
       shell: false,
       terminal: false,

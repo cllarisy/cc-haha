@@ -589,7 +589,7 @@ describe('AppShell boot flow', () => {
     expect(screen.getByTestId('mobile-sidebar-toggle')).toHaveClass('h-11', 'w-11')
   })
 
-  it('keeps browser H5 mobile on chat tabs when settings was restored as active', async () => {
+  it('keeps browser H5 mobile settings accessible when restored as active', async () => {
     mocks.isMobile = true
     mocks.tabState.activeTabId = '__settings__'
     mocks.tabState.tabs = [
@@ -601,8 +601,7 @@ describe('AppShell boot flow', () => {
 
     await screen.findByText('content loaded')
     expect(screen.queryByText('tabs loaded')).not.toBeInTheDocument()
-    await waitFor(() => {
-      expect(mocks.setActiveTab).toHaveBeenCalledWith('session-1')
-    })
+    expect(screen.getByTestId('mobile-session-header')).toHaveTextContent('Settings')
+    expect(mocks.setActiveTab).not.toHaveBeenCalledWith('session-1')
   })
 })

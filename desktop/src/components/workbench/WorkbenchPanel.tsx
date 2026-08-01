@@ -10,6 +10,7 @@ import { useBrowserPanelStore } from '../../stores/browserPanelStore'
 import { WORKBENCH_TAB_PREFIX, useTabStore } from '../../stores/tabStore'
 import { WorkspacePanel } from '../workspace/WorkspacePanel'
 import { BrowserSurface } from '../browser/BrowserSurface'
+import { getDesktopHost } from '../../lib/desktopHost'
 
 type WorkbenchPanelProps = {
   sessionId: string
@@ -34,6 +35,8 @@ const MODE_ITEMS: ReadonlyArray<{
 export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: WorkbenchPanelProps) {
   const t = useTranslation()
   const mode = useWorkspacePanelStore((state) => state.getMode(sessionId))
+  const canPreviewWeb = getDesktopHost().capabilities.previewWebview
+  const effectiveMode = canPreviewWeb ? mode : 'workspace'
   const setMode = useWorkspacePanelStore((state) => state.setMode)
   const closePanel = useWorkspacePanelStore((state) => state.closePanel)
   const ensureBlankBrowser = useBrowserPanelStore((state) => state.ensureBlank)
@@ -95,8 +98,8 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
           aria-label={t('workbench.modeSwitch')}
           className="inline-flex items-center gap-0.5 rounded-[var(--radius-md)] bg-[var(--color-surface-container)] p-0.5"
         >
-          {MODE_ITEMS.map(({ mode: itemMode, labelKey, Icon }) => {
-            const isActive = mode === itemMode
+          {MODE_ITEMS.filter(({ mode: itemMode }) => itemMode !== 'browser' || canPreviewWeb).map(({ mode: itemMode, labelKey, Icon }) => {
+            const isActive = effectiveMode === itemMode
             return (
               <button
                 key={itemMode}
@@ -139,7 +142,7 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        {mode === 'browser' ? (
+        {effectiveMode === 'browser' ? (
           <BrowserSurface sessionId={sessionId} />
         ) : (
           <WorkspacePanel sessionId={sessionId} embedded forceVisible={isTabVariant} />

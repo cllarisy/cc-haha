@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import '@testing-library/jest-dom'
+import { browserHost } from '../../lib/desktopHost/browserHost'
 
 const desktopUiPreferencesApiMock = vi.hoisted(() => ({
   getPreferences: vi.fn(),
@@ -201,6 +202,16 @@ describe('Sidebar', () => {
   const addToast = vi.fn()
 
   beforeEach(() => {
+    window.desktopHost = {
+      ...browserHost,
+      kind: 'electron',
+      isDesktop: true,
+      capabilities: {
+        ...browserHost.capabilities,
+        dialogs: true,
+        nativeFilePaths: true,
+      },
+    }
     connectToSession.mockReset()
     disconnectSession.mockReset()
     fetchSessions.mockReset()
@@ -260,6 +271,7 @@ describe('Sidebar', () => {
   afterEach(() => {
     vi.useRealTimers()
     cleanup()
+    Reflect.deleteProperty(window, 'desktopHost')
     useTabStore.setState({ tabs: [], activeTabId: null })
     window.localStorage.removeItem(PROJECT_ORDER_STORAGE_KEY)
     window.localStorage.removeItem(PROJECT_PINNED_STORAGE_KEY)
@@ -628,6 +640,23 @@ describe('Sidebar', () => {
 
     expect(openTargetStoreMock.ensureTargets).toHaveBeenCalledTimes(1)
     expect(openTargetStoreMock.openTarget).toHaveBeenCalledWith('finder', '/workspace/alpha')
+  })
+
+  it('keeps project organization actions but omits native file-manager launch in Web', () => {
+    Reflect.deleteProperty(window, 'desktopHost')
+    useSessionStore.setState({
+      sessions: [
+        makeSession('alpha-1', 'Alpha Session', '/workspace/alpha', new Date().toISOString()),
+      ],
+    })
+
+    render(<Sidebar />)
+    fireEvent.click(screen.getByRole('button', { name: 'Project actions for alpha' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Pin Project' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Hide from Sidebar' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Open in Finder' })).not.toBeInTheDocument()
+    expect(openTargetStoreMock.ensureTargets).not.toHaveBeenCalled()
   })
 
   it('pins a project above the rest of the project list', async () => {
@@ -1245,7 +1274,7 @@ describe('Sidebar', () => {
     expect(screen.getByTestId('sidebar-settings-dock')).toHaveClass('absolute', 'bottom-0')
   })
 
-  it('keeps mobile navigation focused on chat sessions', async () => {
+  it('keeps safe application navigation available in the mobile drawer', async () => {
     const onRequestClose = vi.fn()
     createSession.mockResolvedValue('session-mobile-new')
     useSessionStore.setState({
@@ -1265,12 +1294,15 @@ describe('Sidebar', () => {
 
     render(<Sidebar isMobile onRequestClose={onRequestClose} />)
 
-    expect(screen.queryByRole('button', { name: 'Scheduled' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Skills Market' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Settings' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Scheduled' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Skills Market' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    expect(onRequestClose).toHaveBeenCalledTimes(1)
 
     fireEvent.click(screen.getByRole('button', { name: /Open Session/ }))
-    expect(onRequestClose).toHaveBeenCalledTimes(1)
+    expect(onRequestClose).toHaveBeenCalledTimes(2)
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'New Session' }))
@@ -1279,7 +1311,7 @@ describe('Sidebar', () => {
     await waitFor(() => {
       expect(createSession).toHaveBeenCalled()
     })
-    expect(onRequestClose).toHaveBeenCalledTimes(2)
+    expect(onRequestClose).toHaveBeenCalledTimes(3)
   })
 
   it('keeps the market entry available in desktop navigation', () => {

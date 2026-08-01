@@ -27,10 +27,17 @@ import { useWorkspacePanelStore } from '../../stores/workspacePanelStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useBrowserPanelStore } from '../../stores/browserPanelStore'
 import { useTabStore } from '../../stores/tabStore'
+import { browserHost } from '../../lib/desktopHost/browserHost'
 
 const SESSION_ID = 'workbench-session'
 
 beforeEach(() => {
+  window.desktopHost = {
+    ...browserHost,
+    kind: 'electron',
+    isDesktop: true,
+    capabilities: { ...browserHost.capabilities, previewWebview: true },
+  }
   useWorkspacePanelStore.setState(useWorkspacePanelStore.getInitialState(), true)
   useBrowserPanelStore.setState(useBrowserPanelStore.getInitialState(), true)
   useTabStore.setState(useTabStore.getInitialState(), true)
@@ -53,6 +60,17 @@ describe('WorkbenchPanel', () => {
     expect(workspace).toHaveTextContent(`workspace:${SESSION_ID}`)
     expect(workspace).toHaveAttribute('data-embedded', 'true')
     expect(screen.queryByTestId('browser-surface')).not.toBeInTheDocument()
+  })
+
+  it('omits the native browser mode and ignores a persisted browser mode in Web', () => {
+    Reflect.deleteProperty(window, 'desktopHost')
+    useWorkspacePanelStore.getState().setMode(SESSION_ID, 'browser')
+
+    render(<WorkbenchPanel sessionId={SESSION_ID} />)
+
+    expect(screen.queryByRole('tab', { name: 'Browser' })).not.toBeInTheDocument()
+    expect(screen.queryByTestId('browser-surface')).not.toBeInTheDocument()
+    expect(screen.getByTestId('workspace-panel')).toBeInTheDocument()
   })
 
   it('renders the native BrowserSurface in browser mode', () => {

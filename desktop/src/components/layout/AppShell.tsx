@@ -53,7 +53,6 @@ export function AppShell() {
   const isMobileShell = useMobileViewport() && !desktopRuntime
   const tabs = useTabStore((s) => s.tabs)
   const activeTabId = useTabStore((s) => s.activeTabId)
-  const setActiveTab = useTabStore((s) => s.setActiveTab)
   const sessions = useSessionStore((s) => s.sessions)
   const activeSession = activeTabId
     ? sessions.find((session) => session.id === activeTabId) ?? null
@@ -224,17 +223,6 @@ export function AppShell() {
     wasMobileShellRef.current = isMobileShell
   }, [isMobileShell, setSidebarOpen])
 
-  useEffect(() => {
-    if (!ready || !isMobileShell) return
-    if (isChatTab(activeTab) || (!activeTab && !activeTabId)) return
-    const nextChatTab = tabs.find(isChatTab)
-    if (nextChatTab) {
-      setActiveTab(nextChatTab.sessionId)
-      return
-    }
-    useTabStore.setState({ activeTabId: null })
-  }, [activeTab, activeTabId, isMobileShell, ready, setActiveTab, tabs])
-
   const setEffectiveSidebarOpen = (open: boolean) => {
     if (isMobileShell) {
       setMobileSidebarOpen(open)
@@ -368,6 +356,10 @@ export function AppShell() {
                   ) : null}
                 </div>
               </div>
+            ) : activeTab ? (
+              <h1 className="min-w-0 flex-1 truncate text-[15px] font-bold text-[var(--color-text-primary)]">
+                {activeTab.title}
+              </h1>
             ) : null}
           </div>
         ) : null}

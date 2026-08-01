@@ -146,6 +146,18 @@ describe('desktopRuntime browser H5 bootstrap', () => {
     expect(clientMocks.postVerify).toHaveBeenCalledWith('/api/h5-access/verify')
   })
 
+  it('removes H5 credentials from the address bar before network requests', async () => {
+    window.history.pushState({}, '', '/?serverUrl=https%3A%2F%2Fpaired.example%2Fapp&h5Token=secret-token#chat')
+    globalThis.fetch = vi.fn().mockResolvedValue(healthOkResponse()) as typeof fetch
+    clientMocks.postVerify.mockResolvedValueOnce({ ok: true })
+
+    await initializeDesktopServerUrl()
+
+    expect(window.location.href).not.toContain('secret-token')
+    expect(window.location.search).toBe('?serverUrl=https%3A%2F%2Fpaired.example%2Fapp')
+    expect(window.location.hash).toBe('#chat')
+  })
+
   it('uses the current browser origin when the H5 shell is served by the desktop server', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue(
       healthOkResponse(),

@@ -7,6 +7,7 @@ import { buildOpenWithMenuItems } from '../../lib/openWithMenuItems'
 import { getServerBaseUrl } from '../../lib/desktopRuntime'
 import { openWithContextForWorkspaceFile } from '../../lib/openWithContextForHref'
 import { TargetIcon } from '@/components/composite/TargetIcon'
+import { getDesktopHost } from '../../lib/desktopHost'
 
 export function WorkspaceFileOpenWith({
   absolutePath,
@@ -24,7 +25,7 @@ export function WorkspaceFileOpenWith({
   const ensureTargets = useOpenTargetStore((s) => s.ensureTargets)
 
   useEffect(() => {
-    void ensureTargets()
+    if (getDesktopHost().capabilities.nativeFilePaths) void ensureTargets()
   }, [ensureTargets])
 
   const items: OpenWithItem[] = buildOpenWithMenuItems(

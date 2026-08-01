@@ -61,6 +61,8 @@ describe('WorkspaceFileOpenWith', () => {
       isDesktop: true,
       capabilities: {
         ...browserHost.capabilities,
+        nativeFilePaths: true,
+        previewWebview: true,
         shell: true,
       },
       shell: {
@@ -144,6 +146,23 @@ describe('WorkspaceFileOpenWith', () => {
       's1',
       'http://127.0.0.1:3456/preview-fs/s1/66estmutl_files/index.html',
     )
+  })
+
+  it('omits native targets and the Electron preview WebView action in Web', () => {
+    Reflect.deleteProperty(window, 'desktopHost')
+    const { getAllByRole } = render(
+      <WorkspaceFileOpenWith
+        absolutePath="/w/66estmutl_files/index.html"
+        sessionId="s1"
+        workspacePath="66estmutl_files/index.html"
+      />,
+    )
+
+    const labels = getAllByRole('menuitem').map((el) => el.textContent)
+    expect(labels).toContain('openWith.workspacePreview')
+    expect(labels.some((label) => label?.includes('openWith.inAppBrowser'))).toBe(false)
+    expect(labels.some((label) => label?.includes('VS Code'))).toBe(false)
+    expect(labels.some((label) => label?.includes('Finder'))).toBe(false)
   })
 
   it('opens the workspace preview for workspace files with session context', () => {

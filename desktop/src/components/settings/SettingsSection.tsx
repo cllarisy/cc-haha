@@ -20,7 +20,7 @@ export type SettingsPageHeaderProps = {
  */
 export function SettingsPageHeader({ title, description, action, className }: SettingsPageHeaderProps) {
   return (
-    <div className={cx('mb-6 flex items-start justify-between gap-4', className)}>
+    <div className={cx('mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4', className)}>
       <div className="min-w-0">
         <h2
           className="text-[24px] font-semibold leading-tight text-[var(--color-text-primary)]"
@@ -32,7 +32,7 @@ export function SettingsPageHeader({ title, description, action, className }: Se
           <p className="mt-1.5 text-[13.5px] leading-6 text-[var(--color-text-secondary)]">{description}</p>
         ) : null}
       </div>
-      {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
+      {action ? <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:flex-nowrap">{action}</div> : null}
     </div>
   )
 }
@@ -55,7 +55,7 @@ export type SettingsSectionProps = {
 export function SettingsSection({ title, description, action, className, children }: SettingsSectionProps) {
   return (
     <section className={cx('mb-8', className)}>
-      <div className="mb-3 flex items-start justify-between gap-3">
+      <div className="mb-3 flex flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <h2
             className="text-[16.5px] font-semibold leading-tight text-[var(--color-text-primary)]"
@@ -67,7 +67,7 @@ export function SettingsSection({ title, description, action, className, childre
             <p className="mt-1 text-[13px] leading-5 text-[var(--color-text-tertiary)]">{description}</p>
           ) : null}
         </div>
-        {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
+        {action ? <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:flex-nowrap">{action}</div> : null}
       </div>
       {children}
     </section>

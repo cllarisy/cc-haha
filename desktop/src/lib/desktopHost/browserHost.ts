@@ -9,10 +9,16 @@ import { buildTraceWindowUrl } from '../traceLaunch'
 import { readBrowserLanguages } from '../../i18n/locale'
 
 const browserCapabilities: DesktopHostCapabilities = {
+  adapterLifecycle: false,
   appMode: false,
-  clipboard: false,
+  clipboard: true,
+  computerUse: false,
   dialogs: false,
-  notifications: false,
+  externalLinks: true,
+  h5AccessControl: false,
+  nativeFilePaths: false,
+  notifications: true,
+  pets: false,
   previewWebview: false,
   shell: false,
   terminal: false,

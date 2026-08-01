@@ -47,6 +47,19 @@ curl http://127.0.0.1:3456/health
 
 ## 提供 H5 页面
 
+仓库把浏览器发行模式称为 Web；它与 Electron renderer 共用同一套 React 源码，但生成独立的 `desktop/web-dist` 静态产物，由 Bun 在同一 Origin 发布页面、REST 和 WebSocket：
+
+```bash
+# 开发（Bun + Vite，默认只监听 127.0.0.1）
+bun run web:dev
+
+# 生产构建与启动
+bun run web:build
+bun run web:start
+```
+
+Desktop 对应命令为 `bun run desktop:dev`、`bun run desktop:build` 和 `bun run desktop:package`。Web 产物不进入 Electron 安装包，Electron 仍使用 `desktop/dist`。
+
 源码运行时先构建桌面 Web 资源：
 
 ```bash
@@ -68,8 +81,23 @@ CLAUDE_H5_DIST_DIR=/absolute/path/to/desktop/dist \
 | `CLAUDE_H5_DIST_DIR` | H5 构建产物目录，目录内必须有 `index.html` |
 | `CLAUDE_H5_PUBLIC_BASE_URL` | 固定的公开服务地址 |
 | `CLAUDE_H5_AUTO_PUBLIC_URL=1` | 在启用 H5 时尝试生成局域网公开地址 |
+| `CLAUDE_H5_TOKEN` | 无 Desktop 的 Web 部署专用访问令牌；16–512 个可见 ASCII 字符，不写入前端 bundle |
+| `CLAUDE_H5_ALLOWED_ORIGINS` | Web 部署允许的精确 Origin，逗号分隔，禁止通配符 |
 
 完整的 Token、允许来源、手机访问和 Nginx 配置见 [H5 访问](../desktop/remote.md)。
+
+本机部署无需令牌。要从局域网或反向代理公开，必须显式设置监听地址、独立令牌和精确 Origin，例如：
+
+```bash
+SERVER_HOST=0.0.0.0 \
+CLAUDE_H5_TOKEN='请替换为至少16字符的随机令牌' \
+CLAUDE_H5_ALLOWED_ORIGINS='https://cc.example.com' \
+bun run web:start
+```
+
+浏览器首次连接时在连接页输入该令牌。不要把令牌写入 `VITE_*` 变量、URL、前端文件或普通日志。局域网明文 HTTP 只适合受信任网络；经公网或反向代理时必须使用 HTTPS，并代理 `/api`、`/proxy`、`/ws` 和静态资源。
+
+Web 会完整移除只能作用于服务端机器的入口：内嵌 PTY、原生目录选择、IDE/文件管理器、自动更新/重启、桌面宠物、Electron 预览 WebView、Computer Use、本机 Adapter 生命周期和 H5 管理控制面。剪贴板、外部链接、文件上传、通知和缩放使用浏览器标准能力；会话、消息、权限、工作区/Diff、Provider、Agent、Skill、Plugin、MCP、任务、Trace、Memory、诊断和统计继续走共享 REST/WebSocket 实现。
 
 ## 访问控制
 

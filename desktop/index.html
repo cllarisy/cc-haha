@@ -39,7 +39,10 @@
     <link rel="icon" href="/app-icon.png" type="image/png" />
     <!-- Fonts are self-hosted in /fonts/ and declared via @font-face in globals.css -->
     <script>
-      if (new URLSearchParams(window.location.search).get('petWindow') === '1') {
+      if (
+        window.desktopHost?.capabilities?.pets === true &&
+        new URLSearchParams(window.location.search).get('petWindow') === '1'
+      ) {
         document.documentElement.dataset.windowKind = 'pet'
       }
     </script>
@@ -160,7 +163,16 @@
           var details = [
             summary,
             '',
-            'URL: ' + window.location.href,
+            'URL: ' + (function () {
+              try {
+                var safeUrl = new URL(window.location.href)
+                safeUrl.searchParams.delete('h5Token')
+                safeUrl.searchParams.delete('token')
+                return safeUrl.toString()
+              } catch (_) {
+                return window.location.origin + window.location.pathname
+              }
+            })(),
             'User Agent: ' + navigator.userAgent,
             'Time: ' + new Date().toISOString()
           ].join('\n')

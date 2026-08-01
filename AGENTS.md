@@ -4,6 +4,11 @@ This file is the entry point for coding agents. Keep it short: it should route a
 
 Rules closer to the code take precedence. Before editing `.github/`, `src/`, `desktop/`, `adapters/`, or `docs/`, read the nested `AGENTS.md` in that directory.
 
+## Session Start and Handoff
+
+- Before any development task, read the root `CODEX_CONTEXT.md`, then verify its architecture, decisions, known issues, and follow-up notes against the current code. The code is authoritative when they differ.
+- After any task that changes behavior, architecture, configuration, or directory structure, update `CODEX_CONTEXT.md` with the implemented change, actual verification results, decisions, and remaining risks so a fresh session can continue from it.
+
 ## Start Here
 
 - Run `git status --short` before editing. Preserve all existing user changes and never revert, restage, reformat, or overwrite unrelated work.

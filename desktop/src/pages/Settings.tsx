@@ -73,7 +73,7 @@ import { TraceList } from './TraceList'
 import { ActivitySettings } from './ActivitySettings'
 import { MemorySettings } from './MemorySettings'
 import { PetSettings } from '../features/pets/PetSettings'
-import { useUIStore } from '../stores/uiStore'
+import { useUIStore, type SettingsTab } from '../stores/uiStore'
 import { ClaudeOfficialLogin } from '../components/settings/ClaudeOfficialLogin'
 import { ChatGPTOfficialLogin } from '../components/settings/ChatGPTOfficialLogin'
 import { GrokOfficialLogin } from '../components/settings/GrokOfficialLogin'
@@ -108,6 +108,7 @@ import {
   stripProviderSettingsJsonEnv,
 } from '../lib/providerSettingsJson'
 import { copyTextToClipboard } from '@/lib/clipboard'
+import { useMobileViewport } from '../hooks/useMobileViewport'
 
 const NETWORK_TIMEOUT_MIN_SECONDS = 30
 const NETWORK_TIMEOUT_MAX_SECONDS = 1800
@@ -230,16 +231,30 @@ export function Settings() {
   const setActiveTab = useUIStore((s) => s.setActiveSettingsTab)
   const pendingSettingsTab = useUIStore((s) => s.pendingSettingsTab)
   const t = useTranslation()
+  const capabilities = getDesktopHost().capabilities
+  const isMobileBrowser = useMobileViewport() && !isDesktopRuntime()
+  const isAvailable = (tab: SettingsTab) => {
+    if (tab === 'h5Access') return capabilities.h5AccessControl
+    if (tab === 'adapters') return capabilities.adapterLifecycle
+    if (tab === 'terminal') return capabilities.terminal
+    if (tab === 'pets') return capabilities.pets
+    if (tab === 'computerUse') return capabilities.computerUse
+    return true
+  }
 
   useEffect(() => {
     if (!pendingSettingsTab) return
-    setActiveTab(pendingSettingsTab)
+    setActiveTab(isAvailable(pendingSettingsTab) ? pendingSettingsTab : 'providers')
     useUIStore.getState().setPendingSettingsTab(null)
   }, [pendingSettingsTab, setActiveTab])
 
+  useEffect(() => {
+    if (!isAvailable(activeTab)) setActiveTab('providers')
+  }, [activeTab, setActiveTab])
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-[var(--color-surface)]">
-      <div className="flex-1 flex overflow-hidden">
+      <div className={`flex-1 overflow-hidden ${isMobileBrowser ? 'flex flex-col' : 'flex'}`}>
         {/* Tab navigation */}
         {/* Narrow enough that the rail is not a gutter of dead space, wide
             enough that the longest label in any locale — the Japanese
@@ -253,44 +268,48 @@ export function Settings() {
             paper fill met a different colour at its bottom edge. It read as a
             white card stranded on a grey panel. Nothing else changed to fix
             it: the tab is right, this was the odd one out. */}
-        <div className="w-[220px] flex-shrink-0 flex flex-col overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-4">
-          <div className="flex-1 flex flex-col gap-0.5">
+        <div className={isMobileBrowser
+          ? 'w-full max-h-44 flex-shrink-0 overflow-y-auto border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3'
+          : 'w-[220px] flex-shrink-0 flex flex-col overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-4'}>
+          <div className={isMobileBrowser ? 'grid grid-cols-2 gap-1' : 'flex-1 flex flex-col gap-0.5'}>
             <TabButton icon="dns" label={t('settings.tab.providers')} active={activeTab === 'providers'} onClick={() => setActiveTab('providers')} />
             <TabButton icon="tune" label={t('settings.tab.general')} active={activeTab === 'general'} onClick={() => setActiveTab('general')} />
-            <TabButton icon="qr_code_2" label={t('settings.tab.h5Access')} active={activeTab === 'h5Access'} onClick={() => setActiveTab('h5Access')} />
-            <TabButton icon="chat" label={t('settings.tab.adapters')} active={activeTab === 'adapters'} onClick={() => setActiveTab('adapters')} />
-            <TabButton icon="terminal" label={t('settings.tab.terminal')} active={activeTab === 'terminal'} onClick={() => setActiveTab('terminal')} />
+            {capabilities.h5AccessControl && <TabButton icon="qr_code_2" label={t('settings.tab.h5Access')} active={activeTab === 'h5Access'} onClick={() => setActiveTab('h5Access')} />}
+            {capabilities.adapterLifecycle && <TabButton icon="chat" label={t('settings.tab.adapters')} active={activeTab === 'adapters'} onClick={() => setActiveTab('adapters')} />}
+            {capabilities.terminal && <TabButton icon="terminal" label={t('settings.tab.terminal')} active={activeTab === 'terminal'} onClick={() => setActiveTab('terminal')} />}
             <TabButton icon="dns" label={t('settings.tab.mcp')} active={activeTab === 'mcp'} onClick={() => setActiveTab('mcp')} />
             <TabButton icon="smart_toy" label={t('settings.tab.agents')} active={activeTab === 'agents'} onClick={() => setActiveTab('agents')} />
             <TabButton icon="auto_awesome" label={t('settings.tab.skills')} active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} />
             <TabButton icon="history_edu" label={t('settings.tab.memory')} active={activeTab === 'memory'} onClick={() => setActiveTab('memory')} />
             <TabButton icon="extension" label={t('settings.tab.plugins')} active={activeTab === 'plugins'} onClick={() => setActiveTab('plugins')} />
-            <TabButton icon="pets" label={t('settings.tab.pets')} active={activeTab === 'pets'} onClick={() => setActiveTab('pets')} />
-            <TabButton icon="mouse" label={t('settings.tab.computerUse')} active={activeTab === 'computerUse'} onClick={() => setActiveTab('computerUse')} />
+            {capabilities.pets && <TabButton icon="pets" label={t('settings.tab.pets')} active={activeTab === 'pets'} onClick={() => setActiveTab('pets')} />}
+            {capabilities.computerUse && <TabButton icon="mouse" label={t('settings.tab.computerUse')} active={activeTab === 'computerUse'} onClick={() => setActiveTab('computerUse')} />}
             <TabButton icon="monitoring" label={t('settings.tab.activity')} active={activeTab === 'activity'} onClick={() => setActiveTab('activity')} />
             <TabButton icon="account_tree" label={t('settings.tab.trace')} active={activeTab === 'trace'} onClick={() => setActiveTab('trace')} />
             <TabButton icon="monitor_heart" label={t('settings.tab.diagnostics')} active={activeTab === 'diagnostics'} onClick={() => setActiveTab('diagnostics')} />
           </div>
-          <div className="mt-2 border-t border-[var(--color-border-separator)] pt-2">
+          <div className={isMobileBrowser ? 'mt-1' : 'mt-2 border-t border-[var(--color-border-separator)] pt-2'}>
             <TabButton icon="info" label={t('settings.tab.about')} active={activeTab === 'about'} onClick={() => setActiveTab('about')} />
           </div>
         </div>
 
         {/* Tab content; trace embeds a full-bleed page that manages its own scroll */}
-        <div className={activeTab === 'trace' ? 'flex-1 flex min-h-0 flex-col overflow-hidden' : 'flex-1 overflow-y-auto px-9 py-8'}>
+        <div className={activeTab === 'trace'
+          ? 'flex-1 flex min-h-0 flex-col overflow-hidden'
+          : `flex-1 overflow-y-auto ${isMobileBrowser ? 'px-4 py-5' : 'px-9 py-8'}`}>
           {activeTab === 'providers' && <ProviderSettings />}
           {activeTab === 'activity' && <ActivitySettings />}
           {activeTab === 'general' && <GeneralSettings />}
-          {activeTab === 'h5Access' && <H5AccessSettings />}
-          {activeTab === 'adapters' && <AdapterSettings />}
-          {activeTab === 'terminal' && <TerminalSettings showPreferences />}
+          {activeTab === 'h5Access' && capabilities.h5AccessControl && <H5AccessSettings />}
+          {activeTab === 'adapters' && capabilities.adapterLifecycle && <AdapterSettings />}
+          {activeTab === 'terminal' && capabilities.terminal && <TerminalSettings showPreferences />}
           {activeTab === 'mcp' && <McpSettings />}
           {activeTab === 'agents' && <AgentManager />}
           {activeTab === 'skills' && <SkillSettings />}
           {activeTab === 'memory' && <MemorySettings />}
           {activeTab === 'plugins' && <PluginSettings />}
-          {activeTab === 'pets' && <PetSettings />}
-          {activeTab === 'computerUse' && <ComputerUseSettings />}
+          {activeTab === 'pets' && capabilities.pets && <PetSettings />}
+          {activeTab === 'computerUse' && capabilities.computerUse && <ComputerUseSettings />}
           {activeTab === 'trace' && <TraceList />}
           {activeTab === 'diagnostics' && <DiagnosticsSettings />}
           {activeTab === 'about' && <AboutSettings />}
@@ -4170,6 +4189,7 @@ function isValidHttpProxyUrl(value: string) {
 
 function AboutSettings() {
   const t = useTranslation()
+  const canUpdate = getDesktopHost().capabilities.updates
   const [version, setVersion] = useState('')
   const updateProxy = useSettingsStore((s) => s.updateProxy)
   const setUpdateProxy = useSettingsStore((s) => s.setUpdateProxy)
@@ -4206,8 +4226,8 @@ function AboutSettings() {
   }, [])
 
   useEffect(() => {
-    void initialize()
-  }, [initialize])
+    if (canUpdate) void initialize()
+  }, [canUpdate, initialize])
 
   useEffect(() => {
     setUpdateProxyDraft(updateProxy)
@@ -4317,7 +4337,7 @@ function AboutSettings() {
         </button>
       </div>
 
-      <Card radius="xl" surface="low" padding="none" className="mt-4 w-full p-4">
+      {canUpdate && <Card radius="xl" surface="low" padding="none" className="mt-4 w-full p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-sm font-medium text-[var(--color-text-primary)]">{t('settings.about.updates')}</div>
@@ -4503,7 +4523,7 @@ function AboutSettings() {
             </div>
           )}
         </div>
-      </Card>
+      </Card>}
 
       {/* Divider */}
       <div className="w-full border-t border-[var(--color-border-separator)] my-6" />

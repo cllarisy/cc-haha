@@ -4,6 +4,7 @@ import '@testing-library/jest-dom'
 import { Settings } from '../pages/Settings'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useUIStore } from '../stores/uiStore'
+import { browserHost } from '../lib/desktopHost/browserHost'
 
 vi.mock('../features/pets/PetSettings', () => ({
   PetSettings: () => <div>Pet settings content</div>,
@@ -11,6 +12,12 @@ vi.mock('../features/pets/PetSettings', () => ({
 
 describe('Settings pet navigation', () => {
   beforeEach(() => {
+    window.desktopHost = {
+      ...browserHost,
+      kind: 'electron',
+      isDesktop: true,
+      capabilities: { ...browserHost.capabilities, pets: true },
+    }
     useSettingsStore.setState({ locale: 'en' })
     useUIStore.setState({ activeSettingsTab: 'providers', pendingSettingsTab: null })
   })

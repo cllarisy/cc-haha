@@ -571,7 +571,7 @@ export function TabBar() {
         {isDesktopRuntime && isActiveSessionTab && (
           <OpenProjectMenu path={openProjectPath} />
         )}
-        <IconButton
+        {desktopHost.capabilities.terminal && <IconButton
           icon={<SquareTerminal size={17} strokeWidth={1.9} />}
           label={t('tabs.openTerminal')}
           onClick={() => {
@@ -585,7 +585,7 @@ export function TabBar() {
           tone={isTerminalPanelOpen ? 'default' : 'muted'}
           pressed={isTerminalPanelOpen}
           data-active={isTerminalPanelOpen ? 'true' : 'false'}
-        />
+        />}
         {isActiveSessionTab && activeTabId && (
           <IconButton
             icon={isWorkspacePanelOpen ? <FolderOpen size={18} strokeWidth={1.9} /> : <Folder size={18} strokeWidth={1.9} />}

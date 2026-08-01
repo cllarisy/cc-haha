@@ -47,6 +47,19 @@ Command-line host and port values take precedence over environment variables. Ke
 
 ## Serve the H5 client
 
+The repository calls the browser distribution Web mode. It shares the exact React source with the Electron renderer, but emits `desktop/web-dist`; Bun serves that shell, REST, and WebSocket from one origin:
+
+```bash
+# Development (Bun + Vite, loopback-only by default)
+bun run web:dev
+
+# Production build and start
+bun run web:build
+bun run web:start
+```
+
+Desktop uses `bun run desktop:dev`, `bun run desktop:build`, and `bun run desktop:package`. The Web output is not bundled into Electron; Electron keeps using `desktop/dist`.
+
 For a source launch, build the Desktop web assets first:
 
 ```bash
@@ -68,8 +81,23 @@ CLAUDE_H5_DIST_DIR=/absolute/path/to/desktop/dist \
 | `CLAUDE_H5_DIST_DIR` | H5 build directory; it must contain `index.html` |
 | `CLAUDE_H5_PUBLIC_BASE_URL` | Fixed public server URL |
 | `CLAUDE_H5_AUTO_PUBLIC_URL=1` | Try to derive a LAN URL while H5 access is enabled |
+| `CLAUDE_H5_TOKEN` | Dedicated token for headless Web deployment; 16–512 visible ASCII characters and never bundled into the client |
+| `CLAUDE_H5_ALLOWED_ORIGINS` | Comma-separated exact browser origins; wildcards are rejected |
 
 Configure the H5 token and exact allowed browser origins in **Settings → H5 Access**. Treat the token like an API key and regenerate it to revoke existing browser access.
+
+Loopback deployment needs no token. LAN or reverse-proxy access must explicitly opt in with a listen address, dedicated token, and exact origin:
+
+```bash
+SERVER_HOST=0.0.0.0 \
+CLAUDE_H5_TOKEN='replace-with-a-random-16-plus-character-token' \
+CLAUDE_H5_ALLOWED_ORIGINS='https://cc.example.com' \
+bun run web:start
+```
+
+Enter that token on the browser connection screen. Never put it in a `VITE_*` variable, URL, client file, or normal logs. Plain HTTP is appropriate only on a trusted LAN; public or reverse-proxy deployments require HTTPS and must proxy static assets, `/api`, `/proxy`, and `/ws`.
+
+Web removes controls that can act on the server machine: embedded PTY, native directory pickers, IDE/file-manager launch, updates/relaunch, pets, Electron preview WebView, Computer Use, local adapter lifecycle, and the H5 admin control plane. Clipboard, external links, uploads, notifications, and zoom use browser APIs. Sessions, streaming chat, permission approval, workspace/diff, providers, agents, skills, plugins, MCP, tasks, traces, memory, diagnostics, and statistics continue through the shared REST/WebSocket implementation.
 
 ## Access control
 

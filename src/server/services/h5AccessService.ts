@@ -600,6 +600,32 @@ function normalizeStoredSettings(value: unknown): StoredH5AccessSettings {
   }
 }
 
+/** Server-only deployment overrides for a headless Web installation. */
+function applyH5DeploymentOverrides(
+  stored: StoredH5AccessSettings,
+  env: Record<string, string | undefined> = process.env,
+): StoredH5AccessSettings {
+  const token = env.CLAUDE_H5_TOKEN
+  if (!token) return stored
+  if (!TOKEN_RE.test(token)) {
+    throw new Error('CLAUDE_H5_TOKEN must contain 16-512 visible ASCII characters')
+  }
+
+  const rawOrigins = env.CLAUDE_H5_ALLOWED_ORIGINS?.trim()
+  const allowedOrigins = rawOrigins
+    ? normalizeAllowedOrigins(rawOrigins.split(',').map((origin) => origin.trim()).filter(Boolean))
+    : stored.allowedOrigins
+
+  return {
+    ...stored,
+    enabled: true,
+    token,
+    tokenHash: hashToken(token),
+    tokenPreview: createTokenPreview(token),
+    allowedOrigins,
+  }
+}
+
 export class H5AccessService {
   private managedSettingsService = new ManagedSettingsService()
 
@@ -644,7 +670,8 @@ export class H5AccessService {
   }
 
   async getSettings(): Promise<H5AccessSettings> {
-    const { h5Access } = await this.readStoredSettings()
+    const stored = await this.readStoredSettings()
+    const h5Access = applyH5DeploymentOverrides(stored.h5Access)
     return toPublicSettings(h5Access)
   }
 
@@ -756,7 +783,8 @@ export class H5AccessService {
   }
 
   async getDiagnostics(): Promise<H5AccessDiagnostics> {
-    const { h5Access } = await this.readStoredSettings()
+    const stored = await this.readStoredSettings()
+    const h5Access = applyH5DeploymentOverrides(stored.h5Access)
     return describeH5AccessDiagnostics(h5Access)
   }
 
@@ -766,7 +794,8 @@ export class H5AccessService {
    * built-in default. Used by the WebSocket handler's disconnect cleanup.
    */
   async getDisconnectGraceMs(): Promise<number> {
-    const { h5Access } = await this.readStoredSettings()
+    const stored = await this.readStoredSettings()
+    const h5Access = applyH5DeploymentOverrides(stored.h5Access)
     return h5Access.disconnectGraceSeconds !== null
       ? h5Access.disconnectGraceSeconds * 1000
       : DEFAULT_DISCONNECT_GRACE_MS
@@ -777,7 +806,8 @@ export class H5AccessService {
       return false
     }
 
-    const { h5Access } = await this.readStoredSettings()
+    const stored = await this.readStoredSettings()
+    const h5Access = applyH5DeploymentOverrides(stored.h5Access)
     if (!h5Access.enabled || !h5Access.tokenHash) {
       return false
     }
@@ -790,7 +820,8 @@ export class H5AccessService {
       return false
     }
 
-    const { h5Access } = await this.readStoredSettings()
+    const stored = await this.readStoredSettings()
+    const h5Access = applyH5DeploymentOverrides(stored.h5Access)
     if (!h5Access.enabled) {
       return false
     }

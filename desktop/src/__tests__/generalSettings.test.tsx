@@ -141,10 +141,16 @@ function installElectronDesktopHost() {
     isDesktop: true,
     capabilities: {
       ...browserHost.capabilities,
+      adapterLifecycle: true,
       appMode: true,
+      computerUse: true,
       dialogs: true,
+      h5AccessControl: true,
+      nativeFilePaths: true,
       notifications: true,
+      pets: true,
       shell: true,
+      terminal: true,
       updates: true,
       zoom: true,
     },
@@ -1656,6 +1662,19 @@ describe('Settings > General tab', () => {
     expect(screen.getByText('MCP')).toBeInTheDocument()
     expect(screen.getByText('Plugins')).toBeInTheDocument()
   })
+
+  it('does not mount native-only settings entries in a browser runtime', () => {
+    Reflect.deleteProperty(window, 'desktopHost')
+    useUIStore.setState({ activeSettingsTab: 'terminal', pendingSettingsTab: null })
+
+    render(<Settings />)
+
+    expect(screen.queryByText('Terminal')).not.toBeInTheDocument()
+    expect(screen.queryByText('H5 Access')).not.toBeInTheDocument()
+    expect(screen.queryByText('Pets')).not.toBeInTheDocument()
+    expect(screen.queryByText('Computer Use')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Providers')[0]?.closest('button')).toHaveAttribute('aria-current', 'page')
+  })
 })
 
 describe('Settings > Providers tab', () => {
@@ -2691,6 +2710,7 @@ describe('Settings > Providers tab', () => {
 
 describe('Settings > About tab', () => {
   beforeEach(() => {
+    installElectronDesktopHost()
     useUIStore.setState({ activeSettingsTab: 'providers', pendingSettingsTab: 'about' })
     useSettingsStore.setState({
       locale: 'en',

@@ -2,6 +2,7 @@ import React from 'react'
 import '@testing-library/jest-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, screen } from '@testing-library/react'
+import { browserHost } from './lib/desktopHost/browserHost'
 
 const mocks = vi.hoisted(() => ({
   runDesktopPersistenceMigrations: vi.fn(),
@@ -38,6 +39,7 @@ describe('desktop bootstrap', () => {
     delete window.__CC_HAHA_SHOW_STARTUP_ERROR__
     vi.restoreAllMocks()
     vi.clearAllMocks()
+    Reflect.deleteProperty(window, 'desktopHost')
   })
 
   it('runs startup migrations and renders the app without top-level await', async () => {
@@ -53,7 +55,19 @@ describe('desktop bootstrap', () => {
     expect(window.__CC_HAHA_BOOTSTRAPPED__).toBe(true)
   })
 
-  it('recognizes only the dedicated pet window query', async () => {
+  it('ignores the pet query in Web', async () => {
+    const { isPetWindowLocation } = await import('./main')
+
+    expect(isPetWindowLocation('?petWindow=1')).toBe(false)
+  })
+
+  it('recognizes only the dedicated pet window query in Desktop', async () => {
+    window.desktopHost = {
+      ...browserHost,
+      kind: 'electron',
+      isDesktop: true,
+      capabilities: { ...browserHost.capabilities, pets: true },
+    }
     const { isPetWindowLocation } = await import('./main')
 
     expect(isPetWindowLocation('?petWindow=1')).toBe(true)

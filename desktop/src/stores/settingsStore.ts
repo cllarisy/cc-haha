@@ -225,13 +225,20 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const previousH5Access = get().h5Access
+      const h5AccessRequest = getDesktopHost().capabilities.h5AccessControl
+        ? loadH5AccessSettings(previousH5Access)
+        : Promise.resolve({
+            settings: previousH5Access,
+            diagnostics: null,
+            error: null,
+          })
       const [{ mode }, modelsRes, { model }, { level }, userSettings, h5AccessResult, traceCapture] = await Promise.all([
         settingsApi.getPermissionMode(),
         modelsApi.list(),
         modelsApi.getCurrent(),
         modelsApi.getEffort(),
         settingsApi.getUser(),
-        loadH5AccessSettings(previousH5Access),
+        h5AccessRequest,
         loadTraceCaptureSettings(),
       ])
       const desktopTerminal = normalizeDesktopTerminalSettings(userSettings.desktopTerminal)
@@ -274,6 +281,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   fetchH5Access: async () => {
+    if (!getDesktopHost().capabilities.h5AccessControl) return
     const result = await loadH5AccessSettings(get().h5Access)
     set({
       h5Access: result.settings,

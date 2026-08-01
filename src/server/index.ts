@@ -50,6 +50,7 @@ import {
   PET_SESSION_LIMIT,
 } from './petAccessPolicy.js'
 import { settleResponseOnRequestAbort } from './requestLifecycle.js'
+import { isRemoteWebCapabilityDenied, remoteWebCapabilityDeniedResponse } from './webAccessPolicy.js'
 
 function readArgValue(flag: string): string | undefined {
   const args = process.argv.slice(2)
@@ -324,6 +325,7 @@ export function startServer(port = PORT, host = HOST) {
           h5Enabled: h5Settings.enabled,
           context: h5RequestContext,
         })
+        const requestKind = classifyH5Request(req, url, h5RequestContext)
         const h5AccessDisabledBlocked = shouldBlockDisabledH5Access({
           request: req,
           url,
@@ -378,7 +380,7 @@ export function startServer(port = PORT, host = HOST) {
               sessionId,
               connectedAt: Date.now(),
               channel: 'client',
-              clientKind: petAccessAuthorized ? 'pet' : 'full',
+              clientKind: petAccessAuthorized ? 'pet' : requestKind === 'h5-browser' ? 'h5' : 'full',
               sdkToken: null,
               serverPort,
               serverHost: localConnectHost,
@@ -505,6 +507,10 @@ export function startServer(port = PORT, host = HOST) {
             if (authError) {
               return withCors(authError, cors)
             }
+          }
+
+          if (requestKind === 'h5-browser' && isRemoteWebCapabilityDenied(req, url)) {
+            return withCors(remoteWebCapabilityDeniedResponse(), cors)
           }
 
           try {

@@ -87,6 +87,7 @@ vi.mock('../../i18n', () => ({
 import { CurrentTurnChangeCard } from './CurrentTurnChangeCard'
 import { localFileUrl } from '../../lib/handlePreviewLink'
 import type { SessionTurnCheckpoint } from '../../api/sessions'
+import { browserHost } from '../../lib/desktopHost/browserHost'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -128,6 +129,20 @@ function renderCard(filesChanged: string[], isLatest = true) {
 // ──────────────────────────────────────────────────────────────────────────────
 // Tests
 // ──────────────────────────────────────────────────────────────────────────────
+beforeEach(() => {
+  window.desktopHost = {
+    ...browserHost,
+    kind: 'electron',
+    isDesktop: true,
+    capabilities: {
+      ...browserHost.capabilities,
+      nativeFilePaths: true,
+      previewWebview: true,
+      shell: true,
+    },
+  }
+})
+
 afterEach(() => {
   cleanup()
 })

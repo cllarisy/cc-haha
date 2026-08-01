@@ -334,7 +334,7 @@ export type WebSocketData = {
   sessionId: string
   connectedAt: number
   channel: 'client' | 'sdk'
-  clientKind?: 'full' | 'pet'
+  clientKind?: 'full' | 'h5' | 'pet'
   sdkToken: string | null
   serverPort: number
   serverHost: string
@@ -400,7 +400,9 @@ export const handleWebSocket = {
     const msg: ServerMessage = { type: 'connected', sessionId }
     sendMessage(ws, msg)
     const toolRequestIds = replayPendingPermissionRequests(ws, sessionId)
-    const computerUseRequestIds = replayPendingComputerUsePermissionRequests(ws, sessionId)
+    const computerUseRequestIds = ws.data.clientKind === 'h5'
+      ? []
+      : replayPendingComputerUsePermissionRequests(ws, sessionId)
     sendMessage(ws, {
       type: 'permission_requests_snapshot',
       toolRequestIds,
@@ -428,6 +430,11 @@ export const handleWebSocket = {
           `Message type ${(message as { type?: unknown }).type ?? 'unknown'} is not available to the pet window`,
           'PET_CAPABILITY_DENIED',
         )
+        return
+      }
+
+      if (ws.data.clientKind === 'h5' && message.type === 'computer_use_permission_response') {
+        sendError(ws, 'Computer Use approval is available only to the local desktop app', 'WEB_CAPABILITY_DENIED')
         return
       }
 
@@ -2421,6 +2428,11 @@ function toStreamingFallbackServerMessage(cliMsg: any): ServerMessage {
 }
 
 function sendMessage(ws: ServerWebSocket<WebSocketData>, message: ServerMessage) {
+  if (
+    ws.data.clientKind === 'h5' &&
+    (message.type === 'computer_use_permission_request' ||
+      (message.type === 'permission_resolved' && message.permissionType === 'computer_use'))
+  ) return
   const outgoing = ws.data.clientKind === 'pet'
     ? toPetServerMessage(message)
     : message

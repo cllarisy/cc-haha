@@ -23,7 +23,7 @@ type DesktopBootstrapModules = [
 ]
 
 export function isPetWindowLocation(search = window.location.search): boolean {
-  return new URLSearchParams(search).get('petWindow') === '1'
+  return getDesktopHost().capabilities.pets && new URLSearchParams(search).get('petWindow') === '1'
 }
 
 function loadDesktopBootstrapModules() {
@@ -40,6 +40,8 @@ function loadDesktopBootstrapModules() {
 
 if (isPetWindowLocation()) {
   document.documentElement.dataset.windowKind = 'pet'
+} else {
+  delete document.documentElement.dataset.windowKind
 }
 
 export async function bootstrapDesktopApp(

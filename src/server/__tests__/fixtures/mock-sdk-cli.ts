@@ -37,6 +37,7 @@ const resumeTranscriptPath = process.env.MOCK_SDK_RESUME_TRANSCRIPT_PATH
 const resumeUpstreamUrl = process.env.MOCK_SDK_RESUME_UPSTREAM_URL
 let initSent = false
 let firstUserExitScheduled = false
+let pendingPermissionText: string | null = null
 
 function transcriptText(entry: any): string {
   const content = entry?.message?.content
@@ -242,6 +243,21 @@ ws.addEventListener('message', (event) => {
           })
           continue
         }
+        if (text.includes('trigger permission')) {
+          pendingPermissionText = text
+          emit(ws, {
+            type: 'control_request',
+            request_id: 'mock-browser-permission',
+            request: {
+              subtype: 'can_use_tool',
+              tool_name: 'Bash',
+              input: { command: 'printf controlled-browser-check' },
+              description: 'Run a controlled browser acceptance command',
+            },
+            session_id: sessionId,
+          })
+          continue
+        }
         emit(ws, {
           type: 'stream_event',
           event: { type: 'message_start' },
@@ -367,6 +383,27 @@ ws.addEventListener('message', (event) => {
           })
         }
         continue
+      }
+
+      if (parsed.type === 'control_response' && parsed.response?.request_id === 'mock-browser-permission') {
+        const allowed = parsed.response?.response?.behavior === 'allow'
+        const result = allowed
+          ? `Permission approved: ${pendingPermissionText ?? 'trigger permission'}`
+          : 'Permission denied'
+        pendingPermissionText = null
+        emit(ws, {
+          type: 'assistant',
+          message: { role: 'assistant', content: [{ type: 'text', text: result }] },
+          session_id: sessionId,
+        })
+        emit(ws, {
+          type: 'result',
+          subtype: 'success',
+          is_error: !allowed,
+          result,
+          usage: { input_tokens: 1, output_tokens: 1 },
+          session_id: sessionId,
+        })
       }
 
       if (parsed.type === 'control_request' && parsed.request?.subtype === 'get_session_usage') {

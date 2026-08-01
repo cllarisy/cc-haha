@@ -12,12 +12,14 @@ import { SubagentRunPage } from '../../pages/SubagentRunPage'
 import { WorkbenchTab } from '../workbench/WorkbenchTab'
 import { previewBridge } from '../../lib/previewBridge'
 import { returnToTraceList } from '../../lib/traceNavigation'
+import { getDesktopHost } from '../../lib/desktopHost'
 
 export function ContentRouter() {
   const activeTabId = useTabStore((s) => s.activeTabId)
   const tabs = useTabStore((s) => s.tabs)
   const activeTabType = tabs.find((t) => t.sessionId === activeTabId)?.type
-  const terminalTabs = tabs.filter((tab) => tab.type === 'terminal')
+  const terminalAvailable = getDesktopHost().capabilities.terminal
+  const terminalTabs = terminalAvailable ? tabs.filter((tab) => tab.type === 'terminal') : []
 
   useEffect(() => {
     if (activeTabType === 'session' || activeTabType === 'workbench') return
@@ -58,7 +60,7 @@ export function ContentRouter() {
     page = workbenchTab?.workbenchSessionId
       ? <WorkbenchTab tabId={activeTabId} sessionId={workbenchTab.workbenchSessionId} />
       : <EmptySession />
-  } else if (activeTabType !== 'terminal') {
+  } else if (activeTabType !== 'terminal' || !terminalAvailable) {
     page = <ActiveSession />
   }
 

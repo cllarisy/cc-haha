@@ -21,7 +21,7 @@ import { conversationService } from '../services/conversationService.js'
 import { computerUseApprovalService } from '../services/computerUseApprovalService.js'
 import { sessionService } from '../services/sessionService.js'
 
-function makeClientSocket(sessionId: string, clientKind: 'full' | 'pet' = 'full') {
+function makeClientSocket(sessionId: string, clientKind: 'full' | 'pet' | 'h5' = 'full') {
   const sent: string[] = []
   return {
     data: {
@@ -507,6 +507,32 @@ describe('WebSocket handler session isolation', () => {
         allowed: false,
       })
     }
+  })
+
+  it('rejects Computer Use permission responses from Web clients', () => {
+    const sessionId = `web-computer-use-${crypto.randomUUID()}`
+    const ws = makeClientSocket(sessionId, 'h5')
+    const resolveApproval = spyOn(computerUseApprovalService, 'resolveApproval').mockReturnValue(true)
+
+    handleWebSocket.open(ws)
+    ws.sent.length = 0
+    handleWebSocket.message(ws, JSON.stringify({
+      type: 'computer_use_permission_response',
+      requestId: 'cu-web-1',
+      response: {
+        granted: [],
+        denied: [],
+        flags: {},
+        userConsented: true,
+      },
+    }))
+
+    expect(resolveApproval).not.toHaveBeenCalled()
+    expect(ws.sent.map((payload) => JSON.parse(payload))).toContainEqual({
+      type: 'error',
+      code: 'WEB_CAPABILITY_DENIED',
+      message: 'Computer Use approval is available only to the local desktop app',
+    })
   })
 
   it('keeps disconnected sessions alive longer while user input is pending', () => {

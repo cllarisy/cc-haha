@@ -436,7 +436,7 @@ export const zh: Record<TranslationKey, string> = {
   'settings.activity.modeHelp.weekly': '每周：每一列表示这一周的 Token 总量。',
   'settings.activity.modeHelp.cumulative': '累计：每一列表示截至该周的累计 Token 总量。',
   'settings.activity.emptyTitle': '暂无本地用量',
-  'settings.activity.emptyBody': '启动 CLI 或桌面会话并完成模型回复后，这里会显示统计。',
+  'settings.activity.emptyBody': '启动 CLI 或应用会话并完成模型回复后，这里会显示统计。',
   'settings.activity.metric.yesterday': '昨天',
   'settings.activity.metric.today': '今天',
   'settings.activity.metric.last4': '近 4 天',
@@ -1208,7 +1208,7 @@ export const zh: Record<TranslationKey, string> = {
 
   // Settings > Plugins
   'settings.plugins.title': '已安装插件',
-  'settings.plugins.description': '查看已安装插件、运行状态，并把插件变更应用到桌面端运行时。',
+  'settings.plugins.description': '查看已安装插件、运行状态，并把插件变更应用到当前运行时。',
   'settings.plugins.browserTitle': '浏览已安装插件',
   'settings.plugins.browserEyebrow': '插件管理',
   'settings.plugins.browserDescription': '插件会把技能、Agent、Hook、MCP 服务和语言工具打包在一起。这里先聚焦已安装插件、健康状态和应用变更反馈，不把 CLI 的整套复杂交互直接搬过来。',
@@ -2229,7 +2229,7 @@ export const zh: Record<TranslationKey, string> = {
   // ─── Scheduled Tasks Pages ──────────────────────────────────────
   'scheduledPage.title': '定时任务',
   'scheduledPage.subtitle': '按计划或在需要时运行任务。在任意会话中输入 {code} 即可创建。',
-  'scheduledPage.desktopNotice': '定时任务仅在桌面应用打开时运行。请确保应用持续运行以按时触发任务。',
+  'scheduledPage.desktopNotice': '定时任务仅在 cc-haha 服务运行时执行。请保持桌面应用或 Web 服务运行，以便任务按时触发。',
   'scheduledPage.oldSubtitle': '管理自动化运维流程和后台维护任务。',
   'scheduledPage.executionMode': '执行模式',
   'scheduledPage.localMode': '本地模式',
@@ -2408,7 +2408,7 @@ export const zh: Record<TranslationKey, string> = {
   'trace.list.sessions': '会话',
   'trace.list.searchPlaceholder': '搜索标题、Session ID 或项目路径',
   'trace.list.emptyTitle': '还没有 Trace 记录',
-  'trace.list.emptyBody': '开启收集后，新的桌面会话会把模型调用链路写入本地 traces 目录。',
+  'trace.list.emptyBody': '开启收集后，新会话会把模型调用链路写入服务端 traces 目录。',
   'trace.list.loadFailed': 'Trace 列表加载失败',
   'trace.list.loadedCount': '已显示 {shown} / {total}',
   'trace.list.loadMore': '加载更多',

@@ -16,15 +16,22 @@ import { useWorkspacePanelStore } from '../stores/workspacePanelStore'
  * Returns true when the link was handled (the caller should preventDefault).
  */
 export function openPreviewLink(href: string, sessionId: string): boolean {
+  const host = getDesktopHost()
   return handlePreviewLink(href, {
     sessionId,
     serverBaseUrl: getServerBaseUrl(),
-    openBrowser: (id, url) => useBrowserPanelStore.getState().open(id, url),
+    openBrowser: (id, url) => {
+      if (host.capabilities.previewWebview) {
+        useBrowserPanelStore.getState().open(id, url)
+      } else {
+        void host.shell.open(url)
+      }
+    },
     openFilePreview: (id, path, reveal) => {
       void useWorkspacePanelStore.getState().openPreview(id, path, 'file', undefined, reveal)
     },
     openExternal: (url) => {
-      void getDesktopHost().shell.open(url)
+      void host.shell.open(url)
         .catch(() => window.open(url, '_blank'))
     },
   })

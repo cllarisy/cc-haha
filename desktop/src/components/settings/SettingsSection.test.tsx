@@ -29,8 +29,10 @@ describe('SettingsPageHeader', () => {
   })
 
   it('renders the action slot', () => {
-    render(<SettingsPageHeader title="Providers" action={<button type="button">Add</button>} />)
+    const { container } = render(<SettingsPageHeader title="Providers" action={<button type="button">Add</button>} />)
     expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
+    expect(container.firstElementChild?.className).toContain('flex-col')
+    expect(container.firstElementChild?.className).toContain('sm:flex-row')
   })
 })
 

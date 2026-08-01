@@ -178,6 +178,8 @@ describe('TabBar', () => {
       isDesktop: true,
       capabilities: {
         ...browserHost.capabilities,
+        terminal: true,
+        nativeFilePaths: true,
         windowControls: true,
       },
       window: {
@@ -1583,6 +1585,7 @@ describe('TabBar', () => {
     })
 
     expect(screen.queryByTestId('open-project-menu')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Open Terminal' })).not.toBeInTheDocument()
   })
 
   it('marks the empty tab-bar gutter as a native drag region without runtime dragging', async () => {

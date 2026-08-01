@@ -3,6 +3,7 @@ import { useBrowserPanelStore } from '../../stores/browserPanelStore'
 import { useTabStore } from '../../stores/tabStore'
 import { useWorkspacePanelStore } from '../../stores/workspacePanelStore'
 import { WorkbenchPanel } from './WorkbenchPanel'
+import { getDesktopHost } from '../../lib/desktopHost'
 
 type WorkbenchTabProps = {
   tabId: string
@@ -13,7 +14,7 @@ export function WorkbenchTab({ tabId, sessionId }: WorkbenchTabProps) {
   const mode = useWorkspacePanelStore((state) => state.getMode(sessionId))
 
   useEffect(() => {
-    if (mode === 'browser') {
+    if (mode === 'browser' && getDesktopHost().capabilities.previewWebview) {
       useBrowserPanelStore.getState().ensureBlank(sessionId)
     }
   }, [mode, sessionId])

@@ -71,7 +71,7 @@ export function CurrentTurnChangeCard({
     // the in-app browser and everything else as a file preview (served by its
     // absolute path). In-workdir files keep the diff view.
     if (isAbsoluteLocalPath(fileEntry.displayPath)) {
-      if (shouldOfferStaticHtmlPreview(fileEntry.displayPath, { siblingFiles: files.map((entry) => entry.displayPath) })) {
+      if (getDesktopHost().capabilities.previewWebview && shouldOfferStaticHtmlPreview(fileEntry.displayPath, { siblingFiles: files.map((entry) => entry.displayPath) })) {
         useBrowserPanelStore.getState().open(sessionId, localFileUrl(getServerBaseUrl(), fileEntry.apiPath))
         return
       }
@@ -96,15 +96,18 @@ export function CurrentTurnChangeCard({
     const triggerEl = event.currentTarget
     const rect = triggerEl.getBoundingClientRect()
     void (async () => {
-      await useOpenTargetStore.getState().ensureTargets()
-      const targets = useOpenTargetStore.getState().targets
+      const capabilities = getDesktopHost().capabilities
+      if (capabilities.nativeFilePaths) await useOpenTargetStore.getState().ensureTargets()
+      const targets = capabilities.nativeFilePaths ? useOpenTargetStore.getState().targets : []
       const ctx = openWithContextForWorkspaceFile(fileEntry.displayPath, fileEntry.apiPath, {
         sessionId,
         serverBaseUrl: getServerBaseUrl(),
         siblingFiles: files.map((entry) => entry.displayPath),
       })
       const items = buildOpenWithItems(ctx, targets, {
-        openInAppBrowser: (url) => useBrowserPanelStore.getState().open(sessionId, url),
+        ...(capabilities.previewWebview
+          ? { openInAppBrowser: (url: string) => useBrowserPanelStore.getState().open(sessionId, url) }
+          : {}),
         openSystem: (p) => { void getDesktopHost().shell.openPath(p).catch(() => {}) },
         openWorkspacePreview: (rel) => { void useWorkspacePanelStore.getState().openPreview(sessionId, rel, 'file') },
         openTarget: (id, abs) => { void useOpenTargetStore.getState().openTarget(id, abs) },

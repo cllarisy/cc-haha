@@ -436,7 +436,7 @@ export const zh: Record<TranslationKey, string> = {
   'settings.activity.modeHelp.weekly': '每週：每一列表示這一週的 Token 總量。',
   'settings.activity.modeHelp.cumulative': '累計：每一列表示截至該周的累計 Token 總量。',
   'settings.activity.emptyTitle': '暫無本地用量',
-  'settings.activity.emptyBody': '啟動 CLI 或桌面會話並完成模型回覆後，這裡會顯示統計。',
+  'settings.activity.emptyBody': '啟動 CLI 或應用會話並完成模型回覆後，這裡會顯示統計。',
   'settings.activity.metric.yesterday': '昨天',
   'settings.activity.metric.today': '今天',
   'settings.activity.metric.last4': '近 4 天',
@@ -1208,7 +1208,7 @@ export const zh: Record<TranslationKey, string> = {
 
   // Settings > Plugins
   'settings.plugins.title': '已安裝外掛',
-  'settings.plugins.description': '檢視已安裝外掛、執行狀態，並把外掛變更應用到桌面端執行時。',
+  'settings.plugins.description': '檢視已安裝外掛、執行狀態，並把外掛變更應用到目前執行時。',
   'settings.plugins.browserTitle': '瀏覽已安裝外掛',
   'settings.plugins.browserEyebrow': '外掛管理',
   'settings.plugins.browserDescription': '外掛會把技能、Agent、Hook、MCP 服務和語言工具打包在一起。這裡先聚焦已安裝外掛、健康狀態和應用變更反饋，不把 CLI 的整套複雜互動直接搬過來。',
@@ -2229,7 +2229,7 @@ export const zh: Record<TranslationKey, string> = {
   // ─── Scheduled Tasks Pages ──────────────────────────────────────
   'scheduledPage.title': '定時任務',
   'scheduledPage.subtitle': '按計劃或在需要時執行任務。在任意會話中輸入 {code} 即可建立。',
-  'scheduledPage.desktopNotice': '定時任務僅在桌面應用開啟時執行。請確保應用持續執行以按時觸發任務。',
+  'scheduledPage.desktopNotice': '定時任務僅在 cc-haha 服務執行時運作。請保持桌面應用或 Web 服務執行，以便任務準時觸發。',
   'scheduledPage.oldSubtitle': '管理自動化運維流程和後臺維護任務。',
   'scheduledPage.executionMode': '執行模式',
   'scheduledPage.localMode': '本地模式',
@@ -2408,7 +2408,7 @@ export const zh: Record<TranslationKey, string> = {
   'trace.list.sessions': '會話',
   'trace.list.searchPlaceholder': '搜尋標題、Session ID 或專案路徑',
   'trace.list.emptyTitle': '還沒有 Trace 記錄',
-  'trace.list.emptyBody': '開啟收集後，新的桌面會話會把模型呼叫鏈路寫入本地 traces 目錄。',
+  'trace.list.emptyBody': '開啟收集後，新會話會把模型呼叫鏈路寫入服務端 traces 目錄。',
   'trace.list.loadFailed': 'Trace 列表載入失敗',
   'trace.list.loadedCount': '已顯示 {shown} / {total}',
   'trace.list.loadMore': '載入更多',
